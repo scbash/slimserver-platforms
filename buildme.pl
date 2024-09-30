@@ -15,7 +15,7 @@ use POSIX qw(strftime);
 use constant DESTDIR_NOT_REQUIRED => '[not required]';
 
 ## Here we set some basic settings.. most of these dont need to change very often.
-my $squeezeCenterStartupScript = "server/slimserver.pl";
+my $squeezeCenterStartupScript = "slimserver.pl";
 my $sourceDirsToExclude = ".vscode .vstags .secrets .gitignore .editorconfig .svn .git .github t tests slimp3 squeezebox /softsqueeze tools ext/source ext-all-debug.js build Firmware/*.bin NYTProf Plugins/*";
 my $revisionTextFile = "server/revision.txt";
 my $revision;
@@ -51,7 +51,7 @@ my $dirsToExcludeForDocker = "$dirsToExcludeForLinuxPackage 5.20 5.22 5.24 5.26 
 my $dirsToExcludeForEncore = "$dirsToExcludeForLinuxPackage 5.20 5.24 5.26 5.28 5.30 5.32 5.34 5.36 5.38 i386-linux arm-linux armhf-linux aarch64-linux i86pc-solaris-thread-multi-64int sparc-linux powerpc-linux icudt46l.dat icudt46b.dat";
 
 ## Initialize some variables we'll use later
-my ($build, $destName, $destDir, $buildDir, $sourceDir, $version, $noCPAN, $fakeRoot, $light, $freebsd, $arm, $encore, $ppc, $x86_64, $i386, $releaseType, $release, $tag);
+my ($build, $destName, $destDir, $buildDir, $serverDir, $platformsDir, $version, $noCPAN, $fakeRoot, $light, $freebsd, $arm, $encore, $ppc, $x86_64, $i386, $releaseType, $release, $tag, $dockerRegistry, $dockerNamespace);
 
 
 ##############################################################################################
@@ -87,7 +87,8 @@ sub checkCommandOptions {
 	GetOptions(
 			'build=s'       => \$build,
 			'buildDir=s'    => \$buildDir,
-			'sourceDir=s'   => \$sourceDir,
+			'serverDir=s'   => \$serverDir,
+			'platformsDir=s'=> \$platformsDir,
 			'destName=s'    => \$destName,
 			'destDir=s'     => \$destDir,
 			'noCPAN'        => \$noCPAN,
@@ -100,7 +101,11 @@ sub checkCommandOptions {
 			'light'         => \$light,
 			'releaseType=s' => \$releaseType,
 			'tag=s'         => \$tag,
-			'fakeRoot'      => \$fakeRoot);
+			'fakeRoot'      => \$fakeRoot,
+			# Docker optional for building/testing forks
+			'registry=s'    => \$dockerRegistry,
+			'namespace=s'   => \$dockerNamespace,
+	);
 
 	if ( !$build ) {
 		showUsage();
@@ -127,7 +132,7 @@ sub checkCommandOptions {
 		}
 
 		## If they passed in all the options, lets go forward...
-		if ($buildDir && $sourceDir && $destDir) {
+		if ($buildDir && $serverDir && $platformsDir && $destDir) {
 			print "INFO: Required variables passed in. Moving forward.\n";
 			return $build;
 
@@ -156,7 +161,7 @@ sub getVersion {
 	## We check the startup script for the version # info on this build. For now, we'll call this
 	## the source of truth for the version information.
 	my @temparray;
-	open(SLIMSERVERPL, "$sourceDir/$squeezeCenterStartupScript") or die "Couldn't open $sourceDir/$squeezeCenterStartupScript to get the version # of this release: $!\n";
+	open(SLIMSERVERPL, "$serverDir/$squeezeCenterStartupScript") or die "Couldn't open $serverDir/$squeezeCenterStartupScript to get the version # of this release: $!\n";
 	while (<SLIMSERVERPL>) {
 		if (/our \$VERSION/) {
 			my @temparray = split(/\'/, $_);
@@ -166,7 +171,7 @@ sub getVersion {
 	close(SLIMSERVERPL);
 
 	if (!$version) {
-		die "Couldn't find the version # in $sourceDir/$squeezeCenterStartupScript... aborting built.\n";
+		die "Couldn't find the version # in $serverDir/$squeezeCenterStartupScript... aborting built.\n";
 	}
 
 	return $version;
@@ -179,9 +184,10 @@ sub getVersion {
 sub printOptions {
 	print "INFO: \$buildDir 	-> $buildDir\n";
 	print "INFO: \$destDir		-> $destDir\n";
-	print "INFO: \$sourceDir	-> $sourceDir\n";
+	print "INFO: \$serverDir	-> $serverDir\n";
+	print "INFO: \$platformsDir	-> $platformsDir\n";
 	print "INFO: \$version		-> $version\n";
-	print "INFO: \$squeezeCenterStartupScript	-> $sourceDir/$squeezeCenterStartupScript\n";
+	print "INFO: \$squeezeCenterStartupScript	-> $serverDir/$squeezeCenterStartupScript\n";
 	print "INFO: \$releaseType	-> $releaseType\n";
 }
 
@@ -232,11 +238,17 @@ sub setupBuildTree {
 		$sourceExclude = "--exclude $sourceExclude";
 	}
 
-	print "INFO: Making copy of server source ($sourceDir -> $buildDir)\n";
-
+	print "INFO: Making copy of server source ($serverDir -> $buildDir)\n";
 	## Exclude the .git directory, and anything else we configured in the beginning of the script.
-	print("rsync -a --quiet $sourceExclude $sourceDir/server $sourceDir/platforms $buildDir\n");
-	system("rsync -a --quiet $sourceExclude $sourceDir/server $sourceDir/platforms $buildDir");
+	## Make sure there is a / at the end of $serverDir so rsync copies the _contents_, not the
+	## directory itself (it's okay there's already one in $serverDir, rsync will ignore the
+	## second slash).
+	print("rsync -a --quiet $sourceExclude $serverDir/ $buildDir/server\n");
+	system("rsync -a --quiet $sourceExclude $serverDir/ $buildDir/server");
+
+	print "INFO: Making copy of platforms ($platformsDir -> $buildDir)\n";
+	print("rsync -a --quiet $sourceExclude $platformsDir/ $buildDir/platforms\n");
+	system("rsync -a --quiet $sourceExclude $platformsDir/ $buildDir/platforms");
 
 	## Verify that things went OK during the transfer...
 	if (!-d "$buildDir/server") {
@@ -244,7 +256,7 @@ sub setupBuildTree {
 	}
 
 	## Force some permissions, just in case they weren't already set
-	chmod 0755, "$buildDir/$squeezeCenterStartupScript";
+	chmod 0755, "$buildDir/server/$squeezeCenterStartupScript";
 	chmod 0755, "$buildDir/server/scanner.pl";
 	chmod 0755, "$buildDir/server/gdresized.pl";
 
@@ -305,7 +317,7 @@ sub doCommandOptions {
 		}
 
 	} elsif ($build eq "docker") {
-		buildDockerImage();
+		buildDockerImage($dockerRegistry, $dockerNamespace, $x86_64, $arm);
 
 	} elsif ($build eq "debian") {
 		## Build a Debian Package
@@ -345,8 +357,8 @@ sub doCommandOptions {
 ##############################################################################################
 sub getRevisionForRepo {
 	my $revision;
-	if (-d "$sourceDir/server/.git") {
-		$revision = `git --git-dir=$sourceDir/server/.git log -n 1 --pretty=format:%ct`;
+	if (-d "$serverDir/.git") {
+		$revision = `git --git-dir=$serverDir/.git log -n 1 --pretty=format:%ct`;
 		$revision =~ s/\s*$//s;
 	} else {
 		$revision = 'UNKNOWN';
@@ -367,7 +379,9 @@ sub showUsage {
 	print "\n";
 	print "Parameters for all builds:\n";
 	print "    --buildDir <dir>             - The directory to do temporary work in\n";
-	print "    --sourceDir <dir>            - The location of the source code repository\n";
+	print "    --serverDir <dir>            - The location of the LMS/Slimserver code repository\n";
+	print "                                   that you've checked out from Git\n";
+	print "    --platformsDir <dir>         - The location of the Slimserver-Platforms repository\n";
 	print "                                   that you've checked out from Git\n";
 	print "    --destDir <dir>              - The destination you'd like your files\n";
 	print "    --releaseType <nightly/release>- Whether you're building a 'release' package, \n";
@@ -388,6 +402,10 @@ sub showUsage {
 	print "--- Building a Docker image (with only ARM and x86_64 Linux binaries)\n";
 	print "    --build docker <required opts below>\n";
 	print "    --tag <tag>                  - additional tag for the Docker image\n";
+	print "    --registry <reg> (optional)  - Docker registry to push to (blank for Docker Hub, ghcr.io for Github)\n";
+	print "    --namespace <ns> (optional)  - Docker namespace for container (e.g. lms-community)\n";
+	print "    --arm (optional)             - Build a container for ARM Linux (can be combined with --x86_64)\n";
+	print "    --x86_64 (optional)          - Build a container for x86_64 Linux (can be combined with --arm)\n";
 	print "\n";
 	print "--- Building an RPM package\n";
 	print "    --build rpm <required opts below>\n";
@@ -439,6 +457,8 @@ sub removeExclusions {
 ## Build Docker image                                                                       ##
 ##############################################################################################
 sub buildDockerImage {
+	my ($registry, $namespace, $x86_64, $arm) = @_;
+
 	removeExclusions($dirsToExcludeForDocker);
 
 	my $dockerDir = "$buildDir/platforms/Docker";
@@ -452,11 +472,21 @@ sub buildDockerImage {
 	$tag ||= "latest" if $releaseType eq "release";
 	push @tags, $tag if $tag;
 
+	my @registryNamespace;
+	push @registryNamespace, $registry if $registry;
+	push @registryNamespace, $namespace || "lmscommunity";
+	my $regname = join('/', @registryNamespace);
 	my $tags = join(' ', map {
-		"--tag lmscommunity/logitechmediaserver:$_";
+		"--tag $regname/logitechmediaserver:$_";
 	} @tags);
 
-	system("cd $workDir; docker buildx build --push --platform linux/arm/v7,linux/amd64,linux/arm64/v8 $tags .");
+	my @arch;
+	push @arch, "linux/amd64" if $x86_64;
+	push @arch, "linux/arm/v7,linux/arm64/v8" if $arm;
+	# Default to both Intel _and_ ARM
+	my $archArg = join(',', @arch) || "linux/arm/v7,linux/amd64,linux/arm64/v8";
+	print("cd $workDir; docker buildx build --push --platform $archArg $tags .");
+	system("cd $workDir; docker buildx build --push --platform $archArg $tags .");
 
 	die('Docker build failed') if $? & 127;
 }
@@ -597,7 +627,7 @@ sub buildDebian {
 	}
 
 	## Lets setup the right version/build #...
-	open (READ, "$sourceDir/platforms/debian/changelog") || die "Can't open changelog file to read: $!\n";
+	open (READ, "$platformsDir/debian/changelog") || die "Can't open changelog file to read: $!\n";
 	open (WRITE, ">$buildDir/platforms/debian/changelog") ||  die "Can't open changelog file to write: $!\n";
 
 	## Unlike the RPM, with a Debian package there's no simple way to go from a
