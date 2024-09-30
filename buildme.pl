@@ -51,7 +51,7 @@ my $dirsToExcludeForDocker = "$dirsToExcludeForLinuxPackage 5.20 5.22 5.24 5.26 
 my $dirsToExcludeForEncore = "$dirsToExcludeForLinuxPackage 5.20 5.24 5.26 5.28 5.30 5.32 5.34 5.36 5.38 i386-linux arm-linux armhf-linux aarch64-linux i86pc-solaris-thread-multi-64int sparc-linux powerpc-linux icudt46l.dat icudt46b.dat";
 
 ## Initialize some variables we'll use later
-my ($build, $destName, $destDir, $buildDir, $serverDir, $platformsDir, $version, $noCPAN, $fakeRoot, $light, $freebsd, $arm, $encore, $ppc, $x86_64, $i386, $releaseType, $release, $tag);
+my ($build, $destName, $destDir, $buildDir, $serverDir, $platformsDir, $version, $noCPAN, $fakeRoot, $light, $freebsd, $arm, $encore, $ppc, $x86_64, $i386, $releaseType, $release, $tag, $dockerRegistry, $dockerNamespace);
 
 
 ##############################################################################################
@@ -101,7 +101,11 @@ sub checkCommandOptions {
 			'light'         => \$light,
 			'releaseType=s' => \$releaseType,
 			'tag=s'         => \$tag,
-			'fakeRoot'      => \$fakeRoot);
+			'fakeRoot'      => \$fakeRoot,
+			# Docker optional for building/testing forks
+			'registry=s'    => \$dockerRegistry,
+			'namespace=s'   => \$dockerNamespace,
+	);
 
 	if ( !$build ) {
 		showUsage();
@@ -313,7 +317,7 @@ sub doCommandOptions {
 		}
 
 	} elsif ($build eq "docker") {
-		buildDockerImage();
+		buildDockerImage($dockerRegistry, $dockerNamespace, $x86_64, $arm);
 
 	} elsif ($build eq "debian") {
 		## Build a Debian Package
@@ -398,6 +402,10 @@ sub showUsage {
 	print "--- Building a Docker image (with only ARM and x86_64 Linux binaries)\n";
 	print "    --build docker <required opts below>\n";
 	print "    --tag <tag>                  - additional tag for the Docker image\n";
+	print "    --registry <reg> (optional)  - Docker registry to push to (blank for Docker Hub, ghcr.io for Github)\n";
+	print "    --namespace <ns> (optional)  - Docker namespace for container (e.g. lms-community)\n";
+	print "    --arm (optional)             - Build a container for ARM Linux (can be combined with --x86_64)\n";
+	print "    --x86_64 (optional)          - Build a container for x86_64 Linux (can be combined with --arm)\n";
 	print "\n";
 	print "--- Building an RPM package\n";
 	print "    --build rpm <required opts below>\n";
@@ -449,6 +457,8 @@ sub removeExclusions {
 ## Build Docker image                                                                       ##
 ##############################################################################################
 sub buildDockerImage {
+	my ($registry, $namespace, $x86_64, $arm) = @_;
+
 	removeExclusions($dirsToExcludeForDocker);
 
 	my $dockerDir = "$buildDir/platforms/Docker";
@@ -462,11 +472,21 @@ sub buildDockerImage {
 	$tag ||= "latest" if $releaseType eq "release";
 	push @tags, $tag if $tag;
 
+	my @registryNamespace;
+	push @registryNamespace, $registry if $registry;
+	push @registryNamespace, $namespace || "lmscommunity";
+	my $regname = join('/', @registryNamespace);
 	my $tags = join(' ', map {
-		"--tag lmscommunity/logitechmediaserver:$_";
+		"--tag $regname/logitechmediaserver:$_";
 	} @tags);
 
-	system("cd $workDir; docker buildx build --push --platform linux/arm/v7,linux/amd64,linux/arm64/v8 $tags .");
+	my @arch;
+	push @arch, "linux/amd64" if $x86_64;
+	push @arch, "linux/arm/v7,linux/arm64/v8" if $arm;
+	# Default to both Intel _and_ ARM
+	my $archArg = join(',', @arch) || "linux/arm/v7,linux/amd64,linux/arm64/v8";
+	print("cd $workDir; docker buildx build --push --platform $archArg $tags .");
+	system("cd $workDir; docker buildx build --push --platform $archArg $tags .");
 
 	die('Docker build failed') if $? & 127;
 }
