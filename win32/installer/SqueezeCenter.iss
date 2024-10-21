@@ -316,6 +316,27 @@ begin
 		Result := '';
 end;
 
+function InitializeSetup(): Boolean;
+var
+	ButtonPressed, ErrorCode: Integer;
+begin
+	if (IsX64Compatible) then
+		begin
+			ButtonPressed := SuppressibleMsgBox(CustomMessage('MigrateToWin64'), mbConfirmation, MB_YESNOCANCEL, IDNO);
+			if (ButtonPressed = IDNO) then
+				Result := True
+			else if (ButtonPressed = IDYES) then
+				begin
+					ShellExec('open', CustomMessage('MigrateToWin64InfoUrl'),'','', SW_SHOWNORMAL, ewNoWait, ErrorCode);
+					Result := False
+				end
+			else
+				Result := False
+		end
+	else
+		Result := True;
+end;
+
 procedure InitializeWizard();
 begin
 	// try to remember whether SS/SC was running as a service before we're uninstalling

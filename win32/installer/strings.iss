@@ -801,3 +801,10 @@ fr.InstallingPerl=Installation de Strawberry Perl... Cela peut prendre du temps.
 ServiceEnablerNeedsLMS=Lyrion Music Server can't be found. Is it correctly installed?
 de.ServiceEnablerNeedsLMS=Lyrion Music Server kann nicht gefunden werden. Ist er korrekt installiert?
 fr.ServiceEnablerNeedsLMS=Le Lyrion Music Server est introuvable. Est-il installé correctement ?
+
+MigrateToWin64=You seem to be running Windows 64-bit. %n%nWe recommend you install the 64-bit version of Lyrion Music Server. %n%nPress "Yes" to get more information, %n"No" to continue, or %n "Cancel" to abort the installion.
+de.MigrateToWin64=Sie scheinen Windows 64-bit zu verwenden. %n%nWir empfehlen, Lyrion Music Server 64-bit zu installieren. %n%nDrücken Sie "Ja" für weitere Informationen, %n"Nein" um die Installation weiter zu führen oder %n"Abbrechen" um die Installation abzubrechen.
+fr.MigrateToWin64=Vous semblez utiliser Windows 64-bit. %n%nNous vous recommandons d'installer la version 64-bits de Lyrion Music Server. %n%nAppuyez sur « Oui » pour obtenir plus d'informations, %nsur « Non » pour continuer, ou %nsur « Annuler » pour interrompre l'installation.
+
+MigrateToWin64InfoUrl=https://lyrion.org/reference/migrate-win32-win64/
+de.MigrateToWin64InfoUrl=https://lyrion.org/reference/migrate-win32-win64-de/
