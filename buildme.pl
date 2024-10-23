@@ -127,7 +127,7 @@ sub checkCommandOptions {
 		}
 
 		## If they passed in all the options, lets go forward...
-		if ($buildDir && $sourceDir && $destDir) {
+		if ($buildDir && $sourceDir && $destDir && ($tag || $build ne 'docker')) {
 			print "INFO: Required variables passed in. Moving forward.\n";
 			return $build;
 
@@ -468,14 +468,22 @@ sub buildDockerImage {
 	push @tags, $tag if $tag;
 
 	my $tags = join(' ', map {
-		my $additionalTag = "--tag lmscommunity/logitechmediaserver:$_";
-		# TODO - remove once we go all in on lyrionmusicserver!
-		$additionalTag .= " --tag lmscommunity/$defaultDestName:$_" if $tag eq 'dev';
-		$additionalTag;
+		" --tag lmscommunity/$defaultDestName:$_";
 	} @tags);
 
-
 	system("cd $workDir; docker buildx build --push --platform linux/arm/v7,linux/amd64,linux/arm64/v8 $tags .");
+
+	# TODO - remove once we go all in on lyrionmusicserver!
+	# this is the legacy "logitechmediaserver" image tag
+	if ($tag eq 'dev' && $version eq '9.0.0') {
+		system("cp -r $dockerDir/DockerRepoWarning $workDir/Slim/Plugin/");
+
+		my $tags = join(' ', map {
+			" --tag lmscommunity/logitechmediaserver:$_";
+		} @tags);
+
+		system("cd $workDir; docker buildx build --push --platform linux/arm/v7,linux/amd64,linux/arm64/v8 $tags .");
+	}
 
 	die('Docker build failed') if $? & 127;
 }
