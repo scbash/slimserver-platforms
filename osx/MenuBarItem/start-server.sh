@@ -17,9 +17,16 @@ if [ z"$SERVER_RUNNING" = z ] ; then
 	cd "$BASE_FOLDER/server"
 
 	MAJOR_OS_VERSION=`sw_vers | fgrep ProductVersion | tr -dc '0-9.' | cut -d '.' -f 1`
+
+	echo "Major macOS version: $MAJOR_OS_VERSION"
+	PERL_518=`which perl5.18`
+	echo "System Perl 5.18: $PERL_518"
+
 	if [ $MAJOR_OS_VERSION = 10 -a -x "/usr/bin/perl5.18" ] ; then
+		echo "Using Apple's Perl 5.18"
 		PERL_BINARY="/usr/bin/perl5.18"
 	else
+		echo "Using our custom Perl build"
 		PERL_BINARY="$BASE_FOLDER/bin/perl"
 	fi
 
