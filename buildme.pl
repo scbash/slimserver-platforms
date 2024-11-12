@@ -800,10 +800,19 @@ sub buildMacOS {
 		print "INFO: Building $realName.app with source from $buildDir/$pkgName...\n";
 		system("cd $buildDir && rm -rf '$destDir/$realName.app' && mv '$pkgName.app' '$destDir/$realName.app'");
 
+		# see whether we have certificates to sign the binaries
+		# "$ENV{HOME}/Library/Developer/Xcode/UserData/Provisioning\ Profiles/build_pp.provisionprofile";
+		if ( $ENV{BUILD_CERTIFICATE_BASE64} && $ENV{DEV_CERT_NAME} ) {
+			print "INFO: Signing $realName.app...\n";
+			system("codesign -v -s \"$ENV{DEV_CERT_NAME}\" '$destDir/$realName.app'");
+		}
+
 		# if we have NodeJS installed, try to create a DMG file - see https://github.com/sindresorhus/create-dmg
 		if (`which npx`) {
 			print "INFO: Building $pkgName.dmg using $realName.app...\n";
 			system("cd $destDir; npx --yes create-dmg --overwrite '$realName.app'; mv -f L*.dmg '$pkgName.dmg'");
+
+			# TODO - notarization
 		}
 	}
 }
