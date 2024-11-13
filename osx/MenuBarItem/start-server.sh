@@ -27,7 +27,7 @@ if [ z"$SERVER_RUNNING" = z ] ; then
 		PERL_BINARY="/usr/bin/perl5.18"
 	else
 		echo "Using our custom Perl build"
-		PERL_BINARY="$BASE_FOLDER/bin/perl"
+		PERL_BINARY="$BASE_FOLDER/../MacOS/perl"
 	fi
 
 	"$PERL_BINARY" slimserver.pl $1 &> /dev/null &

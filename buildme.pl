@@ -759,12 +759,18 @@ sub buildMacOS {
 			print "INFO: Removing $_ files from buildDir...\n";
 			system("find $buildDir | grep -i $_ | xargs rm -rf ");
 		}
+		system("rm -f $destDir/*.dmg");
 
 		## Copy in the documentation and license files..
 		print "INFO: Copying documentation & licenses...\n";
 		copy("$buildDir/server/license.txt", "$buildDir/$pkgName/License.txt");
 
 		system("cd \"$buildDir\"; mkdir perl; cd perl; tar xjf \"$buildDir/platforms/osx/Perl-5.34.0-x86_64-arm64.tar.bz2\"; chmod a+x bin/perl");
+
+		my $realName = $pkgName;
+		$realName =~ s/-.*//;
+		$realName =~ s/(.)([A-Z])/$1 $2/g;
+		print "INFO: Building $realName.app with source from $buildDir/$pkgName...\n";
 
 		my @args = (
 			'--name', 'Lyrion Music Server',
@@ -776,10 +782,8 @@ sub buildMacOS {
 			'--status-item-icon', "$buildDir/platforms/osx/MenuBarItem/iconTemplate.icns",
 			'--status-item-template-icon',
 			'--status-item-sysfont',
-			'--interpreter', './bin/perl',
+			'--interpreter', '../MacOS/perl',
 			'--background',
-			'--bundled-file', "$buildDir/perl/bin",
-			'--bundled-file', "$buildDir/perl/lib",
 			'--bundled-file', "$buildDir/platforms/osx/MenuBarItem/LMSMenuAction.pm",
 			'--bundled-file', "$buildDir/platforms/osx/MenuBarItem/LMSMenu.json",
 			'--bundled-file', "$buildDir/platforms/osx/MenuBarItem/start-server.sh",
@@ -794,17 +798,23 @@ sub buildMacOS {
 
 		system('platypus', @args);
 
-		my $realName = $pkgName;
-		$realName =~ s/-.*//;
-		$realName =~ s/(.)([A-Z])/$1 $2/g;
-		print "INFO: Building $realName.app with source from $buildDir/$pkgName...\n";
+		# binaries have to live in the MacOS folder, or notarization will fail!
+		# https://developer.apple.com/documentation/bundleresources/placing_content_in_a_bundle
+		# https://developer.apple.com/documentation/xcode/embedding-nonstandard-code-structures-in-a-bundle
+		move("$buildDir/perl/bin/perl", "$buildDir/$pkgName.app/Contents/MacOS/perl");
+		system("cp -R '$buildDir/perl/lib' '$buildDir/$pkgName.app/Contents/'");
+		system("cd '$buildDir/$pkgName.app/Contents/Resources/server/Bin/darwin' && rm -f mac; mv * '$buildDir/$pkgName.app/Contents/MacOS'");
 		system("cd $buildDir && rm -rf '$destDir/$realName.app' && mv '$pkgName.app' '$destDir/$realName.app'");
 
 		# see whether we have certificates to sign the binaries
 		# "$ENV{HOME}/Library/Developer/Xcode/UserData/Provisioning\ Profiles/build_pp.provisionprofile";
+		my $hasCerts;
 		if ( $ENV{BUILD_CERTIFICATE_BASE64} && $ENV{DEV_CERT_NAME} ) {
+			$hasCerts = 1;
 			print "INFO: Signing $realName.app...\n";
-			system("codesign -v -s \"$ENV{DEV_CERT_NAME}\" '$destDir/$realName.app'");
+			# we must --force the signature to replace existing signatures
+			system("cd '$destDir/$realName.app/Contents/MacOS/'; ls | grep -v Server | xargs codesign -s \"$ENV{DEV_CERT_NAME}\" -o runtime --force ");
+			system("codesign -v -s \"$ENV{DEV_CERT_NAME}\" -o runtime '$destDir/$realName.app'");
 		}
 
 		# if we have NodeJS installed, try to create a DMG file - see https://github.com/sindresorhus/create-dmg
@@ -812,7 +822,14 @@ sub buildMacOS {
 			print "INFO: Building $pkgName.dmg using $realName.app...\n";
 			system("cd $destDir; npx --yes create-dmg --overwrite '$realName.app'; mv -f L*.dmg '$pkgName.dmg'");
 
-			# TODO - notarization
+			if ($hasCerts) {
+				print "INFO: Notarizing $pkgName.dmg...";
+				system("xcrun notarytool submit '$destDir/$pkgName.dmg' --progress --apple-id=$ENV{APPLE_ID} --password=$ENV{NOTARIZATION_PW} --team-id=$ENV{TEAM_ID} --wait");
+				system("xcrun stapler staple '$destDir/$pkgName.dmg'");
+			}
+		}
+		else {
+			print "INFO: we're missing the necessary tools to build the DMG package.";
 		}
 	}
 }

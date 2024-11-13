@@ -1,4 +1,4 @@
-#!./bin/perl -Iserver/CPAN -Iserver -I.
+#!../MacOS/perl -Iserver/CPAN -Iserver -I.
 
 use strict;
 

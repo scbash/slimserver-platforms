@@ -12,14 +12,12 @@ APP_FOLDER="${PWD%/*/*}"
 mkdir -p $LOG_FOLDER
 mkdir -p $HOME/Library/LaunchAgents
 
-PERL_BINARY="$PWD/bin/perl"
+PERL_BINARY="$PWD/../MacOS/perl"
 PRODUCT_FOLDER="$PWD/server"
 
 MAJOR_OS_VERSION=`sw_vers | fgrep ProductVersion | tr -dc '0-9.' | cut -d '.' -f 1`
 if [ $MAJOR_OS_VERSION = 10 -a -x "/usr/bin/perl5.18" ] ; then
 	PERL_BINARY="/usr/bin/perl5.18"
-else
-	PERL_BINARY="$PWD/bin/perl"
 fi
 
 launchctl unload "$PRODUCT_PLIST" &> /dev/null
