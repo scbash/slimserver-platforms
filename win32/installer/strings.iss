@@ -506,6 +506,7 @@ sv.SqueezeCenterTrayTool=Lyrion Music Server-systemfältsverktyg
 Start_LMS=Start Lyrion Music Server (if not configured to run as a service)
 de.Start_LMS=Starte Lyrion Music Server (wenn nicht als Dienst konfiguriert)
 fr.Start_LMS=Démarrer Lyrion Music Server (si non configuré pour s'exécuter en tant que service)
+nl.Start_LMS=Start Lyrion Music Server (als deze niet als service is geconfigureerd)
 
 cz.SqueezeCenterWebInterface=Webové rozhraní Squeezebox
 da.SqueezeCenterWebInterface=Webbaseret brugerflade til Squeezebox
@@ -676,12 +677,14 @@ ru.Startup_RadioAtBoot_Caption0=Запускать Lyrion Music Server &авто
 sv.Startup_RadioAtBoot_Caption0=Starta Lyrion Music Server &automatiskt när datorn startas.
 
 Startup_RadioAtBootCustom_Caption0=Start Lyrion Music Server &automatically using custom credentials.
-de.Startup_RadioAtBootCustom_Caption0=Lyrion Music Server automatisch mit Anmeldedaten starten.
-fr.Startup_RadioAtBootCustom_Caption0=Démarrer le Lyrion Music Server automatiquement avec vos informations d'authentification.
+de.Startup_RadioAtBootCustom_Caption0=Lyrion Music Server &automatisch mit Anmeldedaten starten.
+fr.Startup_RadioAtBootCustom_Caption0=Démarrer le Lyrion Music Server &automatiquement avec vos informations d'authentification.
+nl.Startup_RadioAtBootCustom_Caption0=Lyrion Music Server &automatisch starten met aangepaste referenties.
 
 Startup_DisableService_Caption0=Disable Lyrion Music Server background service.
 de.Startup_DisableService_Caption0=Lyrion Music Server Hintergrunddienst deaktivieren.
 fr.Startup_DisableService_Caption0=Désactiver le service d'arrière-plan du Lyrion Music Server.
+nl.Startup_DisableService_Caption0=Schakel de achtergronddienst van Lyrion Music Server uit.
 
 cz.SummaryForm_Description=Souhrn
 da.SummaryForm_Description=Oversigt
@@ -714,10 +717,12 @@ sv.UninstallPrefs=Vill du ta bort alla inställningar och loggfiler?
 RemoveLegacyFiles=Removing legacy files from earlier installations...
 de.RemoveLegacyFiles=Entferne nicht mehr benötigte Dateien...
 fr.RemoveLegacyFiles=Suppression des fichiers des installations précédentes...
+nl.RemoveLegacyFiles=Oude bestanden van eerdere installaties verwijderen...
 
 RemoveLegacyFilesWarning=Please be patient - this task can take several minutes.
 de.RemoveLegacyFilesWarning=Bitte haben Sie Geduld - diese Aktion kann mehrere Minuten dauern.
 fr.RemoveLegacyFilesWarning=Soyez patient : cette tâche peut prendre plusieurs minutes.
+nl.RemoveLegacyFilesWarning=Wees geduldig - deze taak kan enkele minuten duren.
 
 cz.UninstallSqueezeCenter=Odinstalovat Lyrion Music Server
 da.UninstallSqueezeCenter=Afinstaller Lyrion Music Server
@@ -789,22 +794,27 @@ StrawberryPerl=Strawberry Perl
 NeedStrawberryPerl=Strawberry Perl is required to run Lyrion Music Server
 de.NeedStrawberryPerl=Strawberry Perl wird für die Ausführung von Lyrion Music Server benötigt
 fr.NeedStrawberryPerl=Strawberry Perl est nécessaire pour exécuter le Lyrion Music Server
+nl.NeedStrawberryPerl=Strawberry Perl is nodig om Lyrion Music Server uit te voeren
 
 DownloadingPerl=Installation of Strawberry Perl is only required the first time you install.
 de.DownloadingPerl=Die Installation von Strawberry Perl wird einmalig ausgeführt.
 fr.DownloadingPerl=L'installation de Strawberry Perl n'a lieu qu'une seule fois.
+nl.DownloadingPerl=De installatie van Strawberry Perl is alleen nodig bij de eerste installatie.
 
 InstallingPerl=Installing Strawberry Perl... This can take a while - please be patient!
 de.InstallingPerl=Installiere Strawberry Perl... Dies kann eine Weile dauern - danke für die Geduld!
 fr.InstallingPerl=Installation de Strawberry Perl... Cela peut prendre du temps. Merci pour votre patience !
+nl.InstallingPerl=Aardbei Perl installeren... Dit kan even duren - wees geduldig!
 
 ServiceEnablerNeedsLMS=Lyrion Music Server can't be found. Is it correctly installed?
 de.ServiceEnablerNeedsLMS=Lyrion Music Server kann nicht gefunden werden. Ist er korrekt installiert?
 fr.ServiceEnablerNeedsLMS=Le Lyrion Music Server est introuvable. Est-il installé correctement ?
+nl.ServiceEnablerNeedsLMS=Lyrion Music Server kan niet worden gevonden. Is het correct geïnstalleerd?
 
 MigrateToWin64=You seem to be running Windows 64-bit. %n%nWe recommend you install the 64-bit version of Lyrion Music Server. %n%nPress "Yes" to get more information, %n"No" to continue, or %n "Cancel" to abort the installion.
 de.MigrateToWin64=Sie scheinen Windows 64-bit zu verwenden. %n%nWir empfehlen, Lyrion Music Server 64-bit zu installieren. %n%nDrücken Sie "Ja" für weitere Informationen, %n"Nein" um die Installation weiter zu führen oder %n"Abbrechen" um die Installation abzubrechen.
 fr.MigrateToWin64=Vous semblez utiliser Windows 64-bit. %n%nNous vous recommandons d'installer la version 64-bits de Lyrion Music Server. %n%nAppuyez sur « Oui » pour obtenir plus d'informations, %nsur « Non » pour continuer, ou %nsur « Annuler » pour interrompre l'installation.
+nl.MigrateToWin64=Het lijkt erop dat u Windows 64-bits gebruikt. %n%nWij raden u aan de 64-bits versie van Lyrion Music Server te installeren. %n%nDruk op "Yes" voor meer informatie, %n"No" om door te gaan, of %n"Cancel" om de installatie af te breken.
 
 MigrateToWin64InfoUrl=https://lyrion.org/reference/migrate-win32-win64/
 de.MigrateToWin64InfoUrl=https://lyrion.org/reference/migrate-win32-win64-de/
