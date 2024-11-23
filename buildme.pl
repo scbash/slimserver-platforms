@@ -464,7 +464,7 @@ sub buildDockerImage {
 	system("cp $dockerDir/.dockerignore $dockerDir/* $workDir");
 
 	my @tags = ("$version");
-	$tag ||= "latest" if $releaseType eq "release";
+	$tag ||= "rc" if $releaseType eq "release";
 	push @tags, $tag if $tag;
 
 	my $tags = join(' ', map {
