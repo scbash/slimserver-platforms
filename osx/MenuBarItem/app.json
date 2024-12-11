@@ -6,7 +6,7 @@
 	"code-sign": { "signing-identity": "_SIGNING_IDENTITY_" },
 	"contents": [
 		{
-			"x": 312,
+			"x": 317,
 			"y": 100,
 			"type": "file",
 			"path": "Getting Started.webloc"
