@@ -3,9 +3,9 @@
 The [LMS Community](https://github.com/LMS-Community)'s Docker image for [Lyrion Music Server](https://github.com/LMS-Community/slimserver/) ([Dockerfile](https://github.com/LMS-Community/slimserver-platforms/tree/HEAD/Docker)). This formerly was known as `logitechmediaserver`.
 
 ## Tags
-* `latest`: the latest release version, currently v8.5.2
-* `stable`: the [bug fix branch](https://github.com/LMS-Community/slimserver/tree/public/8.5) based on the latest release, currently v8.5.3
-* `dev`: the [development version](https://github.com/LMS-Community/slimserver/), with new features, and potentially less stability, currently v9.0.0
+* `latest`: the latest release version, currently v9.0.0
+* `stable`: the [bug fix branch](https://github.com/LMS-Community/slimserver/tree/public/9.0) based on the latest release, currently v9.0.1
+* `dev`: the [development version](https://github.com/LMS-Community/slimserver/), with new features, and potentially less stability, currently v9.1.0
 
 ## Installation
 
@@ -95,13 +95,13 @@ Some systems wouldn't allow you to map volumes outside specific folders, eg. Unr
 * you should either use `host` mode to automatically expose LMS on your network, or add another variable `EXTRA_ARGS` with the value `"--advertiseaddr=192.168.0.100"` (where you'd put your NAS' IP address) - see below for details.
 
 ### How to manually install plugins
-If you're a developer you might want to install plugins manually, before they are available through LMS' built-in plugin manager. In order to do so, put them inside `[config folder]/Cache/Plugins`, then restart LMS. They should be available in thereafter.
+If you're a developer you might want to install plugins manually, before they are available through LMS' built-in plugin manager. In order to do so, put them inside `[config folder]/cache/Plugins`, then restart LMS. They should be available in thereafter.
 
 ### Passing additional launch arguments
 Starting with v8.4 an optional `EXTRA_ARGS` environment variable exists for passing additional arguments to Lyrion Music Server process. For example, disabling the web interface could be achieved with `EXTRA_ARGS="--noweb"`.
 
 ### Define the service's IP address
-Some plugins like eg. the Sounds & Effects, require the player to know the server's IP address. In the default `bridge` networking mode, the internal IP address would be different from what the player can see. Therefore playback would fail - unless we tell Lyrion Music Server what port to announce. This can be done using the above method to define the `--advertiseaddr` parameter:
+Some plugins like eg. the Sounds & Effects, require the player to know the server's IP address. In the default `bridge` networking mode, the internal IP address would be different from what the player can see. Therefore playback would fail - unless we tell Lyrion Music Server what port to announce. This can be done using the above method to define the `--advertiseaddr` parameter (do not put quotes around the parameter!):
 
 
 ```
@@ -115,7 +115,7 @@ docker run -it \
       -p 9090:9090/tcp \
       -p 3483:3483/tcp \
       -p 3483:3483/udp \
-      -e EXTRA_ARGS="--advertiseaddr=192.168.0.100" \
+      -e EXTRA_ARGS=--advertiseaddr=192.168.0.100 \
       lmscommunity/lyrionmusicserver
 ```
 
